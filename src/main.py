@@ -1,6 +1,7 @@
 import numpy as np
 from MLP import CustomMLP
 import keras
+from micrograd.nn import MLP
 
 
 def load_dataset(flatten=False):
@@ -17,12 +18,17 @@ def load_dataset(flatten=False):
 
 X_train, y_train, X_val, y_val, X_test, y_test = load_dataset(flatten = True)
 
+
+
 y_t = np.zeros((y_train.size, 10))
 y_t[np.arange(y_train.size), y_train] = 1
 
-        
-k = CustomMLP()
-    
-k.train(X_train, y_t, epochs = 3)
+model = MLP(784, [512, 256, 10])
 
-k.save_model()
+model.train(X_train, y_train)
+        
+# k = CustomMLP()
+    
+# k.train(X_train, y_t, epochs = 3)
+
+# k.save_model()
