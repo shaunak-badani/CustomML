@@ -1,34 +1,36 @@
-import numpy as np
-from MLP import CustomMLP
-import keras
 from micrograd.nn import MLP
+from micrograd.engine import Value
+from data_loaders.mnist import MNISTData
+from config import Config
+
+import argparse
+import numpy as np
+import os
 
 
-def load_dataset(flatten=False):
-    (X_train, y_train), (X_test, y_test) = keras.datasets.mnist.load_data()
-    X_train = X_train.astype(float) / 255.
-    X_test = X_test.astype(float) / 255.
-    X_train, X_val = X_train[:-10000], X_train[-10000:]
-    y_train, y_val = y_train[:-10000], y_train[-10000:]
-    if flatten:
-        X_train = X_train.reshape([X_train.shape[0], -1])
-        X_val = X_val.reshape([X_val.shape[0], -1])
-        X_test = X_test.reshape([X_test.shape[0], -1])
-    return X_train, y_train, X_val, y_val, X_test, y_test
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--config', help = "optional config file")
+args = parser.parse_args()
 
-X_train, y_train, X_val, y_val, X_test, y_test = load_dataset(flatten = True)
-
-
-
-y_t = np.zeros((y_train.size, 10))
-y_t[np.arange(y_train.size), y_train] = 1
-
-model = MLP(784, [512, 256, 10])
-
-model.train(X_train, y_train)
-        
-# k = CustomMLP()
+if args.config:
+    Config.import_from_file(args.config)
     
-# k.train(X_train, y_t, epochs = 3)
 
-# k.save_model()
+mnist_data_object = MNISTData()
+model = MLP(Config.layers)
+
+if hasattr(Config, 'state_dict_path'):
+    model = MLP.load_to_model(Config.state_dict_path, Config.layers)
+data, target = mnist_data_object.load_flattened_batch()
+history = model.train(Value(data), target, loss_fn = 'cross_entropy', epochs = Config.epochs, output_period = 5)
+print(history)
+save_path = "../models"
+model_name = "model"
+if hasattr(Config, 'run_name'):
+    model_name = Config.run_name
+save_path = os.path.join(save_path, model_name)
+
+model.save_to_torch_model(save_path)
+
+# m2 = MLP.load_to_model()
+# print(m2)
