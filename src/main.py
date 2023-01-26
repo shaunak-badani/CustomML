@@ -22,7 +22,7 @@ model = MLP(Config.layers)
 if hasattr(Config, 'state_dict_path'):
     model = MLP.load_to_model(Config.state_dict_path, Config.layers)
 data, target = mnist_data_object.load_flattened_batch()
-history = model.train(Value(data), target, loss_fn = 'cross_entropy', epochs = Config.epochs, output_period = 5)
+history = model.train(mnist_data_object, loss_fn = 'cross_entropy', epochs = Config.epochs, output_period = Config.output_period)
 print(history)
 save_path = "../models"
 model_name = "model"

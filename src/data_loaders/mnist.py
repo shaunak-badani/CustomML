@@ -4,13 +4,26 @@ import torch
 
 class MNISTData:
 
-    def __init__(self, batch_size = 50, num_workers = 3):
+    def __init__(self, batch_size = 128, num_workers = 3):
         transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
         ])
         dataset1 = datasets.MNIST('../data', train = True, download = True, transform = transform)
         self.data_loader = torch.utils.data.DataLoader(dataset1, batch_size = batch_size,  num_workers = num_workers)
+
+    def flatten_data(self, data, target):
+        """
+        data => torch tensor of size (batch_size, 28, 28)
+        target => torch tensor of size (batch_size, 1)
+        Returns:
+        data => numpy array of size (784, batch_size)
+        target => numpy array of size (1, batch_size)
+        """
+        data = torch.squeeze(data)
+        flattened_input = data.numpy().reshape((-1, data.shape[0]))
+        flattened_labels = target.numpy().reshape((1, -1))
+        return flattened_input, flattened_labels
 
     def load_batch(self):
         """

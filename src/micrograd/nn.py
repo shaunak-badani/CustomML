@@ -39,32 +39,36 @@ class MLP:
             layer.b.grad = np.zeros_like(layer.b.grad)
             
     
-    def train(self, x, y, epochs = 10000, output_period = 100, loss_fn = 'mse'):
+    def train(self, data_object, epochs = 10000, output_period = 100, loss_fn = 'mse'):
         """
         Function to train the model
         args : 
-        x => (flattened_input_size, ?)
-        y => (?, )
+        data_object : Data object which fetches batches
         Assuming that y contains raw label data
         """
-        data = []
+        history = []
         for k in range(epochs):
-            ypred = self.__call__(x)
-            if loss_fn == 'mse':
-                # Have to fix this
-                loss = MSELossFn()
-            if loss_fn == 'cross_entropy':
-                loss = ypred.softmax_with_ce(y)
-            loss.backward()
-            
-            params = self.parameters()
-            lr = 1e-3
-            for param in params:
-                param.data -= lr * param.grad
-            self.zero_grad()
+            for data, target in data_object.data_loader:
+                train_data, target = data_object.flatten_data(data, target)
+                x = Value(train_data)
+                y = target
+
+                ypred = self.__call__(x)
+                if loss_fn == 'mse':
+                    # Have to fix this
+                    loss = MSELossFn()
+                if loss_fn == 'cross_entropy':
+                    loss = ypred.softmax_with_ce(y)
+                loss.backward()
+                
+                params = self.parameters()
+                lr = 1e-3
+                for param in params:
+                    param.data -= lr * param.grad
+                self.zero_grad()
             if k % output_period == 0:
-                data.append([k, loss.data.item()])
-        return np.array(data)
+                history.append([k, loss.data.item()])
+        return np.array(history)
 
     def save_to_torch_model(self, model_path):
         """

@@ -5,6 +5,7 @@ class Config:
     # Setting default values for the config variables
     epochs = 1000
     layers = [784, 256, 10]
+    output_period = 5
 
     @staticmethod
     def import_from_file(file_name):
